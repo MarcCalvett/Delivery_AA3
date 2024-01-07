@@ -27,6 +27,7 @@ public class IK_Scorpion : MonoBehaviour
     public Transform[] legTargets;
     public Transform[] futureLegBases;
 
+<<<<<<< HEAD
     public Slider slider;
     [SerializeField]
     float sliderChangeVelocityFactor = 3f;
@@ -35,6 +36,9 @@ public class IK_Scorpion : MonoBehaviour
 
     public bool ballShooted = false;
     public float startShootTime;
+=======
+    public Slider slider;    
+>>>>>>> origin/feature/Ex2
 
     // Start is called before the first frame update
     void Start()
@@ -53,6 +57,7 @@ public class IK_Scorpion : MonoBehaviour
             animTime += Time.deltaTime;
 
         NotifyTailTarget();
+<<<<<<< HEAD
 
         if (Input.GetKeyUp(KeyCode.Space) && !animPlaying)
         {
@@ -60,6 +65,9 @@ public class IK_Scorpion : MonoBehaviour
             startShootTime = Time.time;
         }
 
+=======
+        
+>>>>>>> origin/feature/Ex2
         if (Input.GetKeyDown(KeyCode.Return))
         {
             NotifyStartWalk();
