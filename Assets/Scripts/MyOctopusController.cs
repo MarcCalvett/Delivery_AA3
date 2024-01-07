@@ -87,76 +87,98 @@ namespace OctopusController
             public Transform randomTarget;
             public MyTentacleController tentacleController;
             public bool ballInMyRange = false;
-            readonly int maxIterations = 100;
+            readonly int maxIterations = 20;
             readonly float distanceThreshold = 0.01f;
-            public void UpdatePos(bool ballShooted, Transform blueBallRegion, Transform blueBall)
-            {
-                ballInMyRange = ballShooted && blueBallRegion != null && randomTarget.GetComponentInParent<BoxCollider>().bounds.Intersects(blueBall.GetComponent<SphereCollider>().bounds);
+            float timerBall = 0;
+            float timerRand = 0;
+            Vector3 startPosBall = Vector3.zero;
+            Vector3 startPosRand = Vector3.zero;
 
-                if (!ballInMyRange)
+            public void UpdatePos(bool stopBall, Transform blueBallRegion, Transform blueBall)
+            {
+                ballInMyRange = stopBall && blueBallRegion != null && randomTarget.GetComponentInParent<BoxCollider>().bounds.Intersects(blueBall.GetComponent<SphereCollider>().bounds);
+                Vector3 targetPos;
+
+                if (ballInMyRange)
                 {
-                    ReachRandomTarget();
+                    startPosRand = Vector3.zero;
+                    timerRand = 0;
+
+                    if (startPosBall == Vector3.zero)
+                        startPosBall = tentacleController._endEffectorSphere.position;
+
+                    if (timerBall >= 1)
+                        timerBall = 1;
+                    else
+                        timerBall += Time.deltaTime * 4;
+                    targetPos = Vector3.Lerp(startPosBall, blueBall.position, timerBall);
                 }
                 else
                 {
-                    ReachBlueTarget(blueBall);
+                    timerBall = 0;
+                    startPosBall = Vector3.zero;
+
+                    if (startPosRand == Vector3.zero)
+                        startPosRand = tentacleController._endEffectorSphere.position;
+
+                    if (timerRand >= 1)
+                        timerRand = 1;
+                    else
+                        timerRand += Time.deltaTime * 6;
+                    targetPos = Vector3.Lerp(startPosRand, randomTarget.position, timerRand);
                 }
+
+                ReachTarget(targetPos);
             }
 
-            private void ReachRandomTarget()
+            private void ReachTarget(Vector3 targetPos)
             {
+                float swingZlimits = 0.01f;
+                float swingXlimits = 0.001f;
+
+                bool targetOutRegion = randomTarget.GetComponentInChildren<MovingTarget>().outRegion;
+
                 for (int iteration = 0; iteration < maxIterations; iteration++)
                 {
                     for (int i = tentacleController.Bones.Length - 1; i >= 0; i--)
                     {
-                        Vector3 targetDir = randomTarget.position - tentacleController.Bones[i].position;
+                        float scaleFactor = targetOutRegion ? 1 : 1.0f / Mathf.Log(i + 0.065f);
+                        float scaleFactor2 = targetOutRegion ? 1 : 1.0f / Mathf.Log(i + 10);
+
+                        Vector3 targetDir = targetPos - tentacleController.Bones[i].position;
                         Vector3 currentDir = tentacleController._endEffectorSphere.position - tentacleController.Bones[i].position;
 
-                        float angleSwing = Vector3.SignedAngle(currentDir, targetDir, Vector3.up);
-                        float angleTwist = Vector3.SignedAngle(currentDir, targetDir, Vector3.forward);
+                        float angleSwingZ = Vector3.SignedAngle(currentDir, targetDir, Vector3.forward);
+                        float angleSwingX = Vector3.SignedAngle(currentDir, targetDir, Vector3.right);
 
-                        Quaternion rotationSwing = Quaternion.AngleAxis(angleSwing, Vector3.up);
-                        Quaternion rotationTwist = Quaternion.AngleAxis(angleTwist, Vector3.forward);
 
-                        // Aplica el swing i el twist als joints
-                        tentacleController.Bones[i].rotation = rotationSwing * rotationTwist * tentacleController.Bones[i].rotation;
+                        //Debug.DrawLine(tentacleController.Bones[i].position, camDir);
 
-                        // Comprova si l'end effector és prou a prop de l'objectiu
-                        float distance = Vector3.Distance(tentacleController._endEffectorSphere.position, randomTarget.position);
+                        float adjustedMaxRotationSwingZ = swingZlimits * scaleFactor;
+                        float adjustedMinRotationSwingZ = -swingZlimits * scaleFactor;
+
+                        float adjustedMaxRotationSwingX = swingXlimits * scaleFactor2;
+                        float adjustedMinRotationSwingX = -swingXlimits * scaleFactor2;
+
+                        // Limita les rotacions per evitar comportaments indesitjats
+                        angleSwingZ = Mathf.Clamp(angleSwingZ, adjustedMinRotationSwingZ, adjustedMaxRotationSwingZ);
+                        angleSwingX = Mathf.Clamp(angleSwingX, adjustedMinRotationSwingX, adjustedMaxRotationSwingX);
+                        angleSwingX *= (targetPos.z - tentacleController.Bones[i].position.z) / 10;
+
+                        Quaternion rotationSwingZ = Quaternion.AngleAxis(angleSwingZ, Vector3.forward);
+                        Quaternion rotationSwingX = Quaternion.AngleAxis(angleSwingX, Vector3.right);
+
+                        tentacleController.Bones[i].rotation = rotationSwingZ * rotationSwingX * tentacleController.Bones[i].rotation;
+
+                        float distance = Vector3.Distance(tentacleController._endEffectorSphere.position, targetPos);
                         if (distance < distanceThreshold)
                         {
-                            return; // Atura les iteracions si està prou a prop de l'objectiu
+                            return;
                         }
                     }
                 }
 
-            }
-            private void ReachBlueTarget(Transform blueBall)
-            {
-                for (int iteration = 0; iteration < maxIterations; iteration++)
-                {
-                    for (int i = tentacleController.Bones.Length - 1; i >= 0; i--)
-                    {
-                        Vector3 targetDir = blueBall.position - tentacleController.Bones[i].position;
-                        Vector3 currentDir = tentacleController._endEffectorSphere.position - tentacleController.Bones[i].position;
 
-                        float angleSwing = Vector3.SignedAngle(currentDir, targetDir, Vector3.up);
-                        float angleTwist = Vector3.SignedAngle(currentDir, targetDir, Vector3.forward);
-
-                        Quaternion rotationSwing = Quaternion.AngleAxis(angleSwing, Vector3.up);
-                        Quaternion rotationTwist = Quaternion.AngleAxis(angleTwist, Vector3.forward);
-
-                        // Aplica el swing i el twist als joints
-                        tentacleController.Bones[i].rotation = rotationSwing * rotationTwist * tentacleController.Bones[i].rotation;
-
-                        // Comprova si l'end effector és prou a prop de l'objectiu
-                        float distance = Vector3.Distance(tentacleController._endEffectorSphere.position, blueBall.position);
-                        if (distance < distanceThreshold)
-                        {
-                            return; // Atura les iteracions si està prou a prop de l'objectiu
-                        }
-                    }
-                }
             }
 
         }

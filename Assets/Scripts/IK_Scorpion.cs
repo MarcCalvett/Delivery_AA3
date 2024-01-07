@@ -25,6 +25,7 @@ public class IK_Scorpion : MonoBehaviour
     public Transform[] legs;
     public Transform[] legTargets;
     public Transform[] futureLegBases;
+    public bool ballShooted = false;
 
     // Start is called before the first frame update
     void Start()
@@ -42,11 +43,12 @@ public class IK_Scorpion : MonoBehaviour
 
         NotifyTailTarget();
         
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Return))
         {
             NotifyStartWalk();
             animTime = 0;
             animPlaying = true;
+            ballShooted = false;
         }
 
         if (animTime < animDuration)
@@ -57,6 +59,7 @@ public class IK_Scorpion : MonoBehaviour
         {
             Body.position = EndPos.position;
             animPlaying = false;
+            ballShooted = true;
         }
 
         _myController.UpdateIK();
