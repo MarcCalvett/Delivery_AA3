@@ -2,21 +2,25 @@
 using System.Collections.Generic;
 using UnityEngine;
 using OctopusController;
+using UnityEngine.UI;
 
 public class IK_Scorpion : MonoBehaviour
 {
-    MyScorpionController _myController= new MyScorpionController();
+    MyScorpionController _myController = new MyScorpionController();
 
     public IK_tentacles _myOctopus;
 
     [Header("Body")]
     float animTime;
-    public float animDuration = 5;
+    [SerializeField]
+    public float[] animDurations;
     bool animPlaying = false;
     public Transform Body;
     public Transform StartPos;
     public Transform EndPos;
-
+    [SerializeField]
+    public Transform[] points;
+    public int currentEnd = 1;
     [Header("Tail")]
     public Transform tailTarget;
     public Transform tail;
@@ -26,42 +30,70 @@ public class IK_Scorpion : MonoBehaviour
     public Transform[] legTargets;
     public Transform[] futureLegBases;
 
+    Vector3 checkPoint;
+    [SerializeField]
+    BodyManager futureLegsManager;
+    public bool ballShooted = false;
+    //[SerializeField]
+    //Transform head;    
+    bool initializeLegs = true;
+    public float startShootTime;
     // Start is called before the first frame update
     void Start()
     {
-        _myController.InitLegs(legs,futureLegBases,legTargets);
+        _myController.InitLegs(legs, futureLegBases, legTargets);
         _myController.InitTail(tail);
-
+        checkPoint = Body.position;
+        NotifyTailTarget();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(animPlaying)
+        futureLegsManager.walking = animPlaying;        
+
+        if (animPlaying)
             animTime += Time.deltaTime;
 
-        NotifyTailTarget();
-        
-        if (Input.GetKeyDown(KeyCode.Space))
+
+        if (Input.GetKeyDown(KeyCode.Return))
         {
+            currentEnd = 1;
+            checkPoint = points[0].position;
             NotifyStartWalk();
             animTime = 0;
             animPlaying = true;
+            ballShooted = false;
         }
 
-        if (animTime < animDuration)
+        if (Input.GetKeyUp(KeyCode.Space) && !animPlaying && currentEnd >= 3)
         {
-            Body.position = Vector3.Lerp(StartPos.position, EndPos.position, animTime / animDuration);
+            ballShooted = true;
+            startShootTime = Time.time;
+        }        
+
+        if (animTime < animDurations[currentEnd - 1])
+        {
+            Body.position = Vector3.Lerp(checkPoint, points[currentEnd].position, animTime / animDurations[currentEnd - 1]);
         }
-        else if (animTime >= animDuration && animPlaying)
+        else if (animTime >= animDurations[currentEnd - 1] && animPlaying)
         {
-            Body.position = EndPos.position;
-            animPlaying = false;
+            //Body.position = points[currentEnd].position;
+            if (currentEnd >= 3)
+            {
+                animPlaying = false;
+            }
+            else
+            {
+                animTime = 0;
+                checkPoint = Body.position;
+                currentEnd++;
+            }
         }
 
         _myController.UpdateIK();
     }
-    
+
     //Function to send the tail target transform to the dll
     public void NotifyTailTarget()
     {
@@ -71,7 +103,7 @@ public class IK_Scorpion : MonoBehaviour
     //Trigger Function to start the walk animation
     public void NotifyStartWalk()
     {
-
-        _myController.NotifyStartWalk();
+        _myController.NotifyStartWalk(initializeLegs);
+        initializeLegs = false;
     }
 }

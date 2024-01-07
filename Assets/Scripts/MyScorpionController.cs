@@ -61,6 +61,8 @@ namespace OctopusController
         {
             public MyTentacleController leg;
             public Transform legTarget, legFuturBase, baseJoint; //Joint 0 has to reach futurBase               //EndEffector has to reach target
+            Vector3[] bonesInitialPos;
+            Quaternion[] bonesInitialRot;
             public float distanceToStartMove, timeToReachFutureBasePos;//0.25, 0.15
             public bool lerpInProgress = false;
             float[] bonesLenghts;
@@ -72,6 +74,8 @@ namespace OctopusController
                 bonesLenghts = new float[leg.Bones.Length];
                 distanceToStartMove = UnityEngine.Random.Range(0.2f, 0.3f);
                 timeToReachFutureBasePos = UnityEngine.Random.Range(0.1f, 0.15f);
+                bonesInitialPos = new Vector3[leg.Bones.Length];
+                bonesInitialRot = new Quaternion[leg.Bones.Length];
                 //Calculem longitud de cada os
                 for (int i = 0; i < leg.Bones.Length; i++)
                 {
@@ -79,8 +83,22 @@ namespace OctopusController
                         bonesLenghts[i] = (leg.Bones[i + 1].position - leg.Bones[i].position).magnitude;
                     else
                         bonesLenghts[i] = 0f;
+
+                    bonesInitialPos[i] = leg.Bones[i].localPosition;
+                    bonesInitialRot[i] = leg.Bones[i].localRotation;
+                }
+
+            }
+
+            public void Restart()
+            {
+                for (int i = 0; i < leg.Bones.Length; i++)
+                {
+                    leg.Bones[i].localPosition = bonesInitialPos[i];
+                    leg.Bones[i].localRotation = bonesInitialRot[i];
                 }
             }
+
             public void UpdateFabrik()
             {
                 SolveIK();
@@ -249,19 +267,30 @@ namespace OctopusController
         }
 
         //TODO: Notifies the start of the walking animation
-        public void NotifyStartWalk()
+        public void NotifyStartWalk(bool initialize)
         {
-            _legsStuff = new LegTargetStuff[6];
-            for (int i = 0; i < 6; i++)
+            if (initialize)
             {
-                _legsStuff[i] = new LegTargetStuff();
-                _legsStuff[i].leg = _legs[i];
-                _legsStuff[i].legFuturBase = legFutureBases[i];
-                _legsStuff[i].legTarget = legTargets[i];
-                _legsStuff[i].legFuturBase = legFutureBases[i];
-                _legsStuff[i].baseJoint = _legsStuff[i].leg.Bones[0];
-                _legsStuff[i].Start();
+                _legsStuff = new LegTargetStuff[6];
+                for (int i = 0; i < 6; i++)
+                {
+                    _legsStuff[i] = new LegTargetStuff();
+                    _legsStuff[i].leg = _legs[i];
+                    _legsStuff[i].legFuturBase = legFutureBases[i];
+                    _legsStuff[i].legTarget = legTargets[i];
+                    _legsStuff[i].legFuturBase = legFutureBases[i];
+                    _legsStuff[i].baseJoint = _legsStuff[i].leg.Bones[0];
+                    _legsStuff[i].Start();
+                }
             }
+            else
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    _legsStuff[i].Restart();
+                }
+            }
+
             legsLoop = true;
         }
 
