@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using OctopusController;
+using UnityEngine.UI;
 
 public class IK_Scorpion : MonoBehaviour
 {
@@ -26,6 +27,8 @@ public class IK_Scorpion : MonoBehaviour
     public Transform[] legTargets;
     public Transform[] futureLegBases;
 
+    public Slider slider;    
+
     // Start is called before the first frame update
     void Start()
     {
@@ -42,7 +45,7 @@ public class IK_Scorpion : MonoBehaviour
 
         NotifyTailTarget();
         
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Return))
         {
             NotifyStartWalk();
             animTime = 0;
