@@ -32,6 +32,7 @@ public class IK_Scorpion : MonoBehaviour
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     public Slider slider;
     [SerializeField]
     float sliderChangeVelocityFactor = 3f;
@@ -54,17 +55,27 @@ public class IK_Scorpion : MonoBehaviour
     bool initializeLegs = true;
     public float startShootTime;
 >>>>>>> origin/feature/Ex3
+=======
+    public Slider slider;
+    public bool ballMoving = false;
+    public bool ballShooted = false;
+    public float startShootTime;
+
+>>>>>>> origin/feature/Ex4
     // Start is called before the first frame update
     void Start()
     {
         _myController.InitLegs(legs, futureLegBases, legTargets);
         _myController.InitTail(tail);
 <<<<<<< HEAD
+<<<<<<< HEAD
         _myController.SaveTailState();
 =======
         checkPoint = Body.position;
         NotifyTailTarget();
 >>>>>>> origin/feature/Ex3
+=======
+>>>>>>> origin/feature/Ex4
     }
 
     // Update is called once per frame
@@ -82,8 +93,13 @@ public class IK_Scorpion : MonoBehaviour
 <<<<<<< HEAD
         NotifyTailTarget();
 <<<<<<< HEAD
+<<<<<<< HEAD
 
         if (Input.GetKeyUp(KeyCode.Space) && !animPlaying)
+=======
+        
+        if (Input.GetKeyDown(KeyCode.Return))
+>>>>>>> origin/feature/Ex4
         {
             ballShooted = true;
             startShootTime = Time.time;
@@ -102,10 +118,20 @@ public class IK_Scorpion : MonoBehaviour
             NotifyStartWalk();
             animTime = 0;
             animPlaying = true;
+<<<<<<< HEAD
             ballShooted = false;
 <<<<<<< HEAD
             _myController.RestartTail();
 
+=======
+            ballMoving = false;
+        }
+
+        if (Input.GetKeyUp(KeyCode.Space) && !animPlaying)
+        {
+            ballShooted = true;
+            startShootTime = Time.time;
+>>>>>>> origin/feature/Ex4
         }
 
         if (!ballShooted)
@@ -120,6 +146,7 @@ public class IK_Scorpion : MonoBehaviour
 >>>>>>> origin/feature/Ex3
         }
 
+<<<<<<< HEAD
         if (Input.GetKeyUp(KeyCode.Space) && !animPlaying && currentEnd >= 3)
         {
             ballShooted = true;
@@ -146,6 +173,9 @@ public class IK_Scorpion : MonoBehaviour
         }
 
         _myController.UpdateIK(ballShooted);
+=======
+        _myController.UpdateIK(ballShooted && !ballMoving, (int)slider.value);
+>>>>>>> origin/feature/Ex4
     }
 
     //Function to send the tail target transform to the dll
