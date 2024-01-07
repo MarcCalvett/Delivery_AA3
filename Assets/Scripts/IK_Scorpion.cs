@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using OctopusController;
+using UnityEngine.UI;
 
 public class IK_Scorpion : MonoBehaviour
 {
@@ -26,27 +27,57 @@ public class IK_Scorpion : MonoBehaviour
     public Transform[] legTargets;
     public Transform[] futureLegBases;
 
+    public Slider slider;
+    [SerializeField]
+    float sliderChangeVelocityFactor = 3f;
+    float sliderChangeVelocity;
+    int sliderSignChange = 1;
+
+    public bool ballShooted = false;
+    public float startShootTime;
+
     // Start is called before the first frame update
     void Start()
     {
         _myController.InitLegs(legs,futureLegBases,legTargets);
         _myController.InitTail(tail);
-
+        _myController.SaveTailState();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(animPlaying)
+        sliderChangeVelocity = slider.maxValue * sliderChangeVelocityFactor;
+
+        if (animPlaying)
             animTime += Time.deltaTime;
 
         NotifyTailTarget();
-        
-        if (Input.GetKeyDown(KeyCode.Space))
+
+        if (Input.GetKeyUp(KeyCode.Space) && !animPlaying)
+        {
+            ballShooted = true;
+            startShootTime = Time.time;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Return))
         {
             NotifyStartWalk();
             animTime = 0;
             animPlaying = true;
+            ballShooted = false;
+            _myController.RestartTail();
+
+        }
+
+        if (!ballShooted)
+        {
+            if (slider.value == slider.maxValue && sliderSignChange > 0)
+                sliderSignChange = -1;
+            else if (slider.value == slider.minValue && sliderSignChange < 0)
+                sliderSignChange = 1;
+            else
+                slider.value += Time.deltaTime * sliderChangeVelocity * sliderSignChange;
         }
 
         if (animTime < animDuration)
@@ -59,7 +90,7 @@ public class IK_Scorpion : MonoBehaviour
             animPlaying = false;
         }
 
-        _myController.UpdateIK();
+        _myController.UpdateIK(ballShooted);
     }
     
     //Function to send the tail target transform to the dll

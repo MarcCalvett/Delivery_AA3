@@ -14,6 +14,7 @@ public class IK_tentacles : MonoBehaviour
     [SerializeField]
     Transform[] _randomTargets;
 
+    bool saveGoal = false;
 
     MyOctopusController _myController = new MyOctopusController();
     
@@ -80,7 +81,13 @@ public class IK_tentacles : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        _myController.UpdateTentacles();
+
+        if(Input.GetKeyDown(KeyCode.Return)) {
+            saveGoal = !saveGoal;
+            _myController.ballShooted = false;
+        }
+
+        _myController.UpdateTentacles(saveGoal);
 
         if (_updateTwistSwingLimits) {
             _myController.TwistMax = _twistMax;

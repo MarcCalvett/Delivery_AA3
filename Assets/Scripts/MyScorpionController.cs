@@ -16,6 +16,8 @@ namespace OctopusController
             public Transform endEffector, target;
             readonly Vector3 rotateAxisJoint0 = Vector3.forward, rotateAxisOtherJoints = Vector3.right;
             readonly float distanceThreshold = 0.01f, correctionVelocity = 5;
+            Vector3[] bonesInitialPos;
+            Quaternion[] bonesInitialRot;
             readonly int iterations = 20;
             public void Update()
             {
@@ -48,6 +50,28 @@ namespace OctopusController
                 bone.Rotate(rotateAxis * -deltaTheta);
 
                 return (distance2 - distance1) / deltaTheta;
+            }
+
+            public void SaveDefaultStates()
+            {
+                bonesInitialPos = new Vector3[tail.Bones.Length];
+                bonesInitialRot = new Quaternion[tail.Bones.Length];
+                for (int i = 0; i < tail.Bones.Length; i++)
+                {
+                    bonesInitialPos[i] = tail.Bones[i].transform.localPosition;
+                    bonesInitialRot[i] = tail.Bones[i].localRotation;
+
+                }
+
+            }
+
+            public void ApplyDefaultStates()
+            {
+                for (int i = 0; i < tail.Bones.Length; i++)
+                {
+                    tail.Bones[i].transform.localPosition = bonesInitialPos[i];
+                    tail.Bones[i].localRotation = bonesInitialRot[i];
+                }
             }
         }
 
@@ -242,10 +266,7 @@ namespace OctopusController
         //TODO: Check when to start the animation towards target and implement Gradient Descent method to move the joints.
         public void NotifyTailTarget(Transform target)
         {
-            _tailStuff = new TailTargetStuff();
-            _tailStuff.tail = _tail;
-            _tailStuff.target = tailTarget;
-            _tailStuff.endEffector = tailEndEffector;
+            
         }
 
         //TODO: Notifies the start of the walking animation
@@ -266,11 +287,22 @@ namespace OctopusController
         }
 
         //TODO: create the apropiate animations and update the IK from the legs and tail
-
-        public void UpdateIK()
+        public void SaveTailState()
         {
-            tailLoop = Vector3.Distance(_tailStuff.tail.Bones[0].GetComponentInParent<Transform>().position, _tailStuff.target.position) <= thresholdToActivateTail;
+            _tailStuff = new TailTargetStuff();
+            _tailStuff.tail = _tail;
+            _tailStuff.target = tailTarget;
+            _tailStuff.endEffector = tailEndEffector;
+            _tailStuff.SaveDefaultStates();
+        }
+        public void RestartTail()
+        {
+            _tailStuff.ApplyDefaultStates();
+        }
 
+        public void UpdateIK(bool tailLoop)
+        {
+            
             if (tailLoop)
             {
                 updateTail();

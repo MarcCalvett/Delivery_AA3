@@ -27,7 +27,7 @@ namespace OctopusController
         float _twistMin, _twistMax;
         float _swingMin, _swingMax;
 
-        bool ballShooted = false;
+        public bool ballShooted = false;
 
         #region public methods
         //DO NOT CHANGE THE PUBLIC METHODS!!
@@ -163,13 +163,13 @@ namespace OctopusController
 
         TentacleTargetStuff[] tentaclesControllers = new TentacleTargetStuff[4];
 
-        public void UpdateTentacles()
+        public void UpdateTentacles(bool saveGoal)
         {
             //TODO: implement logic for the correct tentacle arm to stop the ball and implement CCD method
-            update_ccd();
+            update_ccd(saveGoal);
         }
 
-        void update_ccd()
+        void update_ccd(bool saveGoal)
         {
 
             if (tentaclesControllers.Length == 0) { }
@@ -183,7 +183,7 @@ namespace OctopusController
 
             foreach (TentacleTargetStuff t in tentaclesControllers)
             {
-                t.UpdatePos(ballShooted, _currentRegion, _target);
+                t.UpdatePos(ballShooted && saveGoal, _currentRegion, _target);
             }
 
         }

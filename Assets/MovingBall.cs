@@ -23,15 +23,15 @@ public class MovingBall : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.rotation = Quaternion.identity;
+        //transform.rotation = Quaternion.identity;
 
-        //get the Input from Horizontal axis
-        float horizontalInput = Input.GetAxis("Horizontal");
-        //get the Input from Vertical axis
-        float verticalInput = Input.GetAxis("Vertical");
+        ////get the Input from Horizontal axis
+        //float horizontalInput = Input.GetAxis("Horizontal");
+        ////get the Input from Vertical axis
+        //float verticalInput = Input.GetAxis("Vertical");
 
-        //update the position
-        transform.position = transform.position + new Vector3(-horizontalInput * _movementSpeed * Time.deltaTime, verticalInput * _movementSpeed * Time.deltaTime, 0);
+        ////update the position
+        //transform.position = transform.position + new Vector3(-horizontalInput * _movementSpeed * Time.deltaTime, verticalInput * _movementSpeed * Time.deltaTime, 0);
 
     }
 
