@@ -14,26 +14,77 @@ namespace OctopusController
         {
             public MyTentacleController tail;
             public Transform endEffector, target;
+            Vector3[] bonesInitialPos;
+            Quaternion[] bonesInitialRot;
+            float correctionVelocity = 10;
             readonly Vector3 rotateAxisJoint0 = Vector3.forward, rotateAxisOtherJoints = Vector3.right;
-            readonly float distanceThreshold = 0.01f, correctionVelocity = 5;
-            readonly int iterations = 20;
-            public void Update()
-            {
-                for (int j = 0; j < iterations; j++)
-                    if (Vector3.Distance(endEffector.position, target.position) > distanceThreshold)
-                    {
-                        for (int i = 0; i < tail.Bones.Length; i++)
-                        {
-                            Vector3 rotateAxis;
-                            if (i == 0)
-                                rotateAxis = rotateAxisJoint0;
-                            else
-                                rotateAxis = rotateAxisOtherJoints;
+            readonly float earlyExitThreshold = 0.001f, minCorrectionVelocity = 0.02f,
+                maxCorrectionVelocity = 1, distanceWithMinVelocity = 0.3f, distanceWithMaxVelocity = 3f;
 
-                            float slope = CalculateSlope(tail.Bones[i], rotateAxis);
-                            tail.Bones[i].Rotate(rotateAxis * -slope * correctionVelocity);
+            public void SaveDefaultStates()
+            {
+                bonesInitialPos = new Vector3[tail.Bones.Length];
+                bonesInitialRot = new Quaternion[tail.Bones.Length];
+                for (int i = 0; i < tail.Bones.Length; i++)
+                {
+                    bonesInitialPos[i] = tail.Bones[i].transform.localPosition;
+                    bonesInitialRot[i] = tail.Bones[i].localRotation;
+
+                }
+
+            }
+
+            public void ApplyDefaultStates()
+            {
+                for (int i = 0; i < tail.Bones.Length; i++)
+                {
+                    tail.Bones[i].transform.localPosition = bonesInitialPos[i];
+                    tail.Bones[i].localRotation = bonesInitialRot[i];
+                }
+            }
+
+            public void Update(int shootForce)
+            {
+
+                for (int j = 0; j < 18; j++)
+                {
+                    for (int i = 0; i < tail.Bones.Length; i++)
+                    {
+                        //Verificar la distancia
+                        float currentDistance = Vector3.Distance(endEffector.position, target.position + (target.forward * target.GetComponent<SphereCollider>().radius));
+
+                        if (currentDistance < earlyExitThreshold)
+                        {
+                            //Salir prematuramente si la distancia es suficientemente pequeña
+                            return;
                         }
+
+                        Vector3 rotateAxis;
+                        if (i == 0)
+                            rotateAxis = rotateAxisJoint0;
+                        else
+                            rotateAxis = rotateAxisOtherJoints;
+
+                        float distanceFactor = 1;
+
+                        if (currentDistance <= distanceWithMinVelocity)
+                            correctionVelocity = minCorrectionVelocity;
+                        else
+                        {
+                            float exponent = 0.5f;
+                            distanceFactor = Mathf.Pow((currentDistance - distanceWithMinVelocity) / (distanceWithMaxVelocity - distanceWithMinVelocity), exponent);
+                            correctionVelocity = Mathf.Lerp(minCorrectionVelocity, maxCorrectionVelocity, distanceFactor);
+                        }
+
+                        correctionVelocity += shootForce / 50;
+
+                        float slope = CalculateSlope(tail.Bones[i], rotateAxis);
+                        float rotationChange = slope * correctionVelocity;
+
+                        tail.Bones[i].Rotate(rotateAxis * -rotationChange);
                     }
+
+                }
 
             }
 
@@ -41,16 +92,15 @@ namespace OctopusController
             {
                 float deltaTheta = 0.01f;
 
-                float distance1 = Vector3.Distance(endEffector.position, target.position);
+                float distance1 = Vector3.Distance(endEffector.position, target.position + (target.forward * target.GetComponent<SphereCollider>().radius));
                 bone.Rotate(rotateAxis * deltaTheta);
 
-                float distance2 = Vector3.Distance(endEffector.position, target.position);
+                float distance2 = Vector3.Distance(endEffector.position, target.position + (target.forward * target.GetComponent<SphereCollider>().radius));
                 bone.Rotate(rotateAxis * -deltaTheta);
 
                 return (distance2 - distance1) / deltaTheta;
             }
         }
-
         TailTargetStuff _tailStuff;
 
         bool tailLoop = false;
@@ -267,14 +317,13 @@ namespace OctopusController
 
         //TODO: create the apropiate animations and update the IK from the legs and tail
 
-        public void UpdateIK()
+        public void UpdateIK(bool loopTail, int tailSolverForce)
         {
-            tailLoop = Vector3.Distance(_tailStuff.tail.Bones[0].GetComponentInParent<Transform>().position, _tailStuff.target.position) <= thresholdToActivateTail;
-
-            if (tailLoop)
+            if (loopTail)
             {
-                updateTail();
+                updateTail(tailSolverForce);
             }
+
             if (legsLoop)
             {
                 updateLegs();
@@ -294,9 +343,9 @@ namespace OctopusController
             }
         }
         //TODO: implement Gradient Descent method to move tail if necessary
-        private void updateTail()
+        private void updateTail(int tailSolverForce)
         {
-            _tailStuff.Update();
+            _tailStuff.Update(tailSolverForce);
         }
         //TODO: implement fabrik method to move legs 
         private void updateLegs()
