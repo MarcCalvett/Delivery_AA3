@@ -29,6 +29,7 @@ public class IK_Scorpion : MonoBehaviour
     public Transform[] legs;
     public Transform[] legTargets;
     public Transform[] futureLegBases;
+    public bool ballShooted = false;
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -99,7 +100,10 @@ public class IK_Scorpion : MonoBehaviour
 =======
         
         if (Input.GetKeyDown(KeyCode.Return))
+<<<<<<< HEAD
 >>>>>>> origin/feature/Ex4
+=======
+>>>>>>> origin/feature/Ex5
         {
             ballShooted = true;
             startShootTime = Time.time;
@@ -119,19 +123,33 @@ public class IK_Scorpion : MonoBehaviour
             animTime = 0;
             animPlaying = true;
 <<<<<<< HEAD
+<<<<<<< HEAD
             ballShooted = false;
 <<<<<<< HEAD
             _myController.RestartTail();
 
 =======
             ballMoving = false;
+=======
+            ballShooted = false;
+>>>>>>> origin/feature/Ex5
         }
 
         if (Input.GetKeyUp(KeyCode.Space) && !animPlaying)
         {
+<<<<<<< HEAD
             ballShooted = true;
             startShootTime = Time.time;
 >>>>>>> origin/feature/Ex4
+=======
+            Body.position = Vector3.Lerp(StartPos.position, EndPos.position, animTime / animDuration);
+        }
+        else if (animTime >= animDuration && animPlaying)
+        {
+            Body.position = EndPos.position;
+            animPlaying = false;
+            ballShooted = true;
+>>>>>>> origin/feature/Ex5
         }
 
         if (!ballShooted)
