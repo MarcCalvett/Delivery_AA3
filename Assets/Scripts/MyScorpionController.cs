@@ -18,30 +18,11 @@ namespace OctopusController
             Quaternion[] bonesInitialRot;
             float correctionVelocity = 10;
             readonly Vector3 rotateAxisJoint0 = Vector3.forward, rotateAxisOtherJoints = Vector3.right;
-<<<<<<< HEAD
-            readonly float distanceThreshold = 0.01f, correctionVelocity = 5;
-            Vector3[] bonesInitialPos;
-            Quaternion[] bonesInitialRot;
-            readonly int iterations = 20;
-            public void Update()
-            {
-                for (int j = 0; j < iterations; j++)
-                    if (Vector3.Distance(endEffector.position, target.position) > distanceThreshold)
-                    {
-                        for (int i = 0; i < tail.Bones.Length; i++)
-                        {
-                            Vector3 rotateAxis;
-                            if (i == 0)
-                                rotateAxis = rotateAxisJoint0;
-                            else
-                                rotateAxis = rotateAxisOtherJoints;
-=======
-            readonly float earlyExitThreshold = 0.001f, minCorrectionVelocity = 0.02f,
+            readonly float earlyExitThreshold = 0.001f, minCorrectionVelocity = 0.02f, 
                 maxCorrectionVelocity = 1, distanceWithMinVelocity = 0.3f, distanceWithMaxVelocity = 3f;
->>>>>>> origin/feature/Ex4
-
+            
             public void SaveDefaultStates()
-            {
+            {                
                 bonesInitialPos = new Vector3[tail.Bones.Length];
                 bonesInitialRot = new Quaternion[tail.Bones.Length];
                 for (int i = 0; i < tail.Bones.Length; i++)
@@ -49,8 +30,8 @@ namespace OctopusController
                     bonesInitialPos[i] = tail.Bones[i].transform.localPosition;
                     bonesInitialRot[i] = tail.Bones[i].localRotation;
 
-                }
-
+                }                
+                
             }
 
             public void ApplyDefaultStates()
@@ -63,7 +44,7 @@ namespace OctopusController
             }
 
             public void Update(int shootForce)
-            {
+            {                
 
                 for (int j = 0; j < 18; j++)
                 {
@@ -85,17 +66,17 @@ namespace OctopusController
                             rotateAxis = rotateAxisOtherJoints;
 
                         float distanceFactor = 1;
-
+                        
                         if (currentDistance <= distanceWithMinVelocity)
                             correctionVelocity = minCorrectionVelocity;
                         else
                         {
-                            float exponent = 0.5f;
+                            float exponent = 0.5f; 
                             distanceFactor = Mathf.Pow((currentDistance - distanceWithMinVelocity) / (distanceWithMaxVelocity - distanceWithMinVelocity), exponent);
                             correctionVelocity = Mathf.Lerp(minCorrectionVelocity, maxCorrectionVelocity, distanceFactor);
                         }
 
-                        correctionVelocity += shootForce / 50;
+                        correctionVelocity += shootForce/50;
 
                         float slope = CalculateSlope(tail.Bones[i], rotateAxis);
                         float rotationChange = slope * correctionVelocity;
@@ -119,29 +100,8 @@ namespace OctopusController
 
                 return (distance2 - distance1) / deltaTheta;
             }
-
-            public void SaveDefaultStates()
-            {
-                bonesInitialPos = new Vector3[tail.Bones.Length];
-                bonesInitialRot = new Quaternion[tail.Bones.Length];
-                for (int i = 0; i < tail.Bones.Length; i++)
-                {
-                    bonesInitialPos[i] = tail.Bones[i].transform.localPosition;
-                    bonesInitialRot[i] = tail.Bones[i].localRotation;
-
-                }
-
-            }
-
-            public void ApplyDefaultStates()
-            {
-                for (int i = 0; i < tail.Bones.Length; i++)
-                {
-                    tail.Bones[i].transform.localPosition = bonesInitialPos[i];
-                    tail.Bones[i].localRotation = bonesInitialRot[i];
-                }
-            }
         }
+
         TailTargetStuff _tailStuff;
 
         bool tailLoop = false;
@@ -177,7 +137,7 @@ namespace OctopusController
 
                     bonesInitialPos[i] = leg.Bones[i].localPosition;
                     bonesInitialRot[i] = leg.Bones[i].localRotation;
-                }
+                }                
 
             }
 
@@ -351,13 +311,16 @@ namespace OctopusController
         //TODO: Check when to start the animation towards target and implement Gradient Descent method to move the joints.
         public void NotifyTailTarget(Transform target)
         {
-            
+            _tailStuff = new TailTargetStuff();
+            _tailStuff.tail = _tail;
+            _tailStuff.target = tailTarget;
+            _tailStuff.endEffector = tailEndEffector;
         }
 
         //TODO: Notifies the start of the walking animation
         public void NotifyStartWalk(bool initialize)
         {
-            if (initialize)
+            if(initialize)
             {
                 _legsStuff = new LegTargetStuff[6];
                 for (int i = 0; i < 6; i++)
@@ -368,7 +331,7 @@ namespace OctopusController
                     _legsStuff[i].legTarget = legTargets[i];
                     _legsStuff[i].legFuturBase = legFutureBases[i];
                     _legsStuff[i].baseJoint = _legsStuff[i].leg.Bones[0];
-                    _legsStuff[i].Start();
+                    _legsStuff[i].Start();                    
                 }
             }
             else
@@ -378,38 +341,40 @@ namespace OctopusController
                     _legsStuff[i].Restart();
                 }
             }
-
+            
             legsLoop = true;
         }
 
         //TODO: create the apropiate animations and update the IK from the legs and tail
-<<<<<<< HEAD
+
         public void SaveTailState()
         {
-            _tailStuff = new TailTargetStuff();
-            _tailStuff.tail = _tail;
-            _tailStuff.target = tailTarget;
-            _tailStuff.endEffector = tailEndEffector;
             _tailStuff.SaveDefaultStates();
         }
+
+        public void SaveLegsState()
+        {
+            _tailStuff.SaveDefaultStates();
+        }
+
         public void RestartTail()
         {
             _tailStuff.ApplyDefaultStates();
+
         }
 
-        public void UpdateIK(bool tailLoop)
+        public void RestartLegs()
         {
-            
-            if (tailLoop)
-=======
+            _tailStuff.ApplyDefaultStates();
+
+        }
 
         public void UpdateIK(bool loopTail, int tailSolverForce)
         {
             if (loopTail)
->>>>>>> origin/feature/Ex4
             {
                 updateTail(tailSolverForce);
-            }
+            }          
 
             if (legsLoop)
             {

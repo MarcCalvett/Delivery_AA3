@@ -9,22 +9,6 @@ public class NotifyRegion : MonoBehaviour
 
     public Transform Region { get { return _region; } }
 
-    void Start()
-    {
-
-    }
- 
-
-    void Update()
-    {
-    
-
-
-    }
-
-
-
-
     private void OnCollisionExit(Collision collision)
     {
         _region = null;
@@ -36,9 +20,5 @@ public class NotifyRegion : MonoBehaviour
         _region = collision.collider.transform;
         _region = null;
     }
-
-
-
-
 }
 

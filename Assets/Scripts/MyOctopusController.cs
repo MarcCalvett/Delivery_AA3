@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
+using UnityEngine.XR;
 using static UnityEngine.GraphicsBuffer;
 
 namespace OctopusController
@@ -14,15 +16,12 @@ namespace OctopusController
 
     public class MyOctopusController
     {
-
-
         MyTentacleController[] _tentacles = new MyTentacleController[4];
 
         Transform _currentRegion;
         Transform _target;
 
         Transform[] _randomTargets;// = new Transform[4];
-
 
         float _twistMin, _twistMax;
         float _swingMin, _swingMax;
@@ -37,6 +36,7 @@ namespace OctopusController
         public float SwingMin { set => _swingMin = value; }
         public float SwingMax { set => _swingMax = value; }
 
+        bool stopBall = false;
 
         public void TestLogging(string objectName)
         {
@@ -59,7 +59,7 @@ namespace OctopusController
             _randomTargets = randomTargets;
             //TODO: use the regions however you need to make sure each tentacle stays in its region
 
-        }
+        }       
 
         public void NotifyTarget(Transform target, Transform region)
         {
@@ -72,9 +72,10 @@ namespace OctopusController
         public void NotifyShoot()
         {
             //TODO. what happens here?
-            Debug.Log("Shoot");
             if (!ballShooted)
                 ballShooted = true;
+
+            stopBall = !stopBall;
         }
 
         #endregion
@@ -83,7 +84,7 @@ namespace OctopusController
         //todo: add here anything that you need
 
         class TentacleTargetStuff
-        {
+        {            
             public Transform randomTarget;
             public MyTentacleController tentacleController;
             public bool ballInMyRange = false;
@@ -92,15 +93,15 @@ namespace OctopusController
             float timerBall = 0;
             float timerRand = 0;
             Vector3 startPosBall = Vector3.zero;
-            Vector3 startPosRand = Vector3.zero;
+            Vector3 startPosRand = Vector3.zero;                     
 
             public void UpdatePos(bool stopBall, Transform blueBallRegion, Transform blueBall)
-            {
+            {               
                 ballInMyRange = stopBall && blueBallRegion != null && randomTarget.GetComponentInParent<BoxCollider>().bounds.Intersects(blueBall.GetComponent<SphereCollider>().bounds);
                 Vector3 targetPos;
 
                 if (ballInMyRange)
-                {
+                {     
                     startPosRand = Vector3.zero;
                     timerRand = 0;
 
@@ -114,7 +115,7 @@ namespace OctopusController
                     targetPos = Vector3.Lerp(startPosBall, blueBall.position, timerBall);
                 }
                 else
-                {
+                { 
                     timerBall = 0;
                     startPosBall = Vector3.zero;
 
@@ -127,7 +128,7 @@ namespace OctopusController
                         timerRand += Time.deltaTime * 6;
                     targetPos = Vector3.Lerp(startPosRand, randomTarget.position, timerRand);
                 }
-
+                
                 ReachTarget(targetPos);
             }
 
@@ -163,7 +164,7 @@ namespace OctopusController
                         // Limita les rotacions per evitar comportaments indesitjats
                         angleSwingZ = Mathf.Clamp(angleSwingZ, adjustedMinRotationSwingZ, adjustedMaxRotationSwingZ);
                         angleSwingX = Mathf.Clamp(angleSwingX, adjustedMinRotationSwingX, adjustedMaxRotationSwingX);
-                        angleSwingX *= (targetPos.z - tentacleController.Bones[i].position.z) / 10;
+                        angleSwingX *= (targetPos.z - tentacleController.Bones[i].position.z)/10;
 
                         Quaternion rotationSwingZ = Quaternion.AngleAxis(angleSwingZ, Vector3.forward);
                         Quaternion rotationSwingX = Quaternion.AngleAxis(angleSwingX, Vector3.right);
@@ -176,23 +177,25 @@ namespace OctopusController
                             return;
                         }
                     }
-                }
+                }             
 
 
-            }
+            }            
 
         }
 
         TentacleTargetStuff[] tentaclesControllers = new TentacleTargetStuff[4];
 
-        public void UpdateTentacles(bool saveGoal)
+       
+        public void UpdateTentacles(MovingBall ball)
         {
             //TODO: implement logic for the correct tentacle arm to stop the ball and implement CCD method
-            update_ccd(saveGoal);
+            update_ccd(ball);
         }
 
-        void update_ccd(bool saveGoal)
+        void update_ccd(MovingBall ball)
         {
+            ball.isGoal = !stopBall;
 
             if (tentaclesControllers.Length == 0) { }
             for (int i = 0; i < 4; i++)
@@ -205,7 +208,7 @@ namespace OctopusController
 
             foreach (TentacleTargetStuff t in tentaclesControllers)
             {
-                t.UpdatePos(ballShooted && saveGoal, _currentRegion, _target);
+                t.UpdatePos(stopBall && ballShooted, _currentRegion, _target);
             }
 
         }

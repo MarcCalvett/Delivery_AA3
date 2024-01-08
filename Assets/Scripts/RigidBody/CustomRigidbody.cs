@@ -81,13 +81,13 @@ public class CustomRigidbody : MonoBehaviour
 
         firstShootPosition = transform.position;
 
-        firstVelocity = blueTarget.position - firstShootPosition - (0.5f * gravity * Mathf.Pow(shootDuration, 2));
+        firstVelocity = blueTarget.position - firstShootPosition - (0.5f * gravity * Mathf.Pow(shootDuration, 2)); // Xf = Xo + Vo*t + 1/2*a*t^2
         firstVelocity /= shootDuration;
     }
 
     public Vector3 CalculateAcc(Vector3 _angularVel, Vector3 _currentLinearVel)
     {
-        magnusForce = ComputeMagnusForce(_angularVel, _currentLinearVel);
+        magnusForce = CalculateMagnusForce(_angularVel, _currentLinearVel);
         return (gravity + magnusForce) / ballMass;
     }
     private void Update()
@@ -261,7 +261,7 @@ public class CustomRigidbody : MonoBehaviour
 
     }
 
-    private Vector3 ComputeMagnusForce(Vector3 angularVelocity, Vector3 instantLinearVelocity)
+    private Vector3 CalculateMagnusForce(Vector3 angularVelocity, Vector3 instantLinearVelocity)
     {
         return Vector3.Cross(angularVelocity, instantLinearVelocity);
     }

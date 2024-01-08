@@ -127,7 +127,6 @@ public class BodyManager : MonoBehaviour
         // Interpola suavemente la rotación del objeto hacia la rotación objetivo
         ikScorpion.transform.rotation = Quaternion.Lerp(ikScorpion.transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
 
-        //this.GetComponentInParent<IK_Scorpion>().transform.LookAt(this.GetComponentInParent<IK_Scorpion>().points[this.GetComponentInParent<IK_Scorpion>().currentEnd]);
         CheckPlacements(headFutureLegs, bodyHead, 0);
         CheckPlacements(thoraxFutureLegs, bodyThorax, 1);
         CheckPlacements(abdomenFutureLegs, bodyAbdomen, 2);
@@ -182,43 +181,3 @@ public class BodyManager : MonoBehaviour
 
 }
 
-
-
-//public float headThoraxKForce = 0.1f;
-//public float thoraxAbdomenKForce = 0.1f;
-
-//float headThoraxDefaultDistance;
-//float thoraxAbdomenDefaultDistance;
-
-//void Start()
-//{
-//    headThoraxDefaultDistance = (bodyThorax.position - bodyHead.position).magnitude;
-//    thoraxAbdomenDefaultDistance = (bodyAbdomen.position - bodyThorax.position).magnitude;
-//}
-
-//// Update is called once per frame
-
-//private void FixedUpdate()
-//{
-//    // Cálculos para el primer par de objetos (bodyHead y bodyThorax)
-//    Vector3 direction1 = bodyThorax.position - bodyHead.position;
-//    float distance1 = direction1.magnitude;
-
-//    // Calcula la fuerza del muelle
-//    Vector3 force1 = headThoraxKForce * (distance1 - headThoraxDefaultDistance) * direction1.normalized;
-
-//    // Aplica la fuerza y ajusta la rotación del objeto2 (bodyThorax)
-//    bodyThorax.position -= force1 * Time.fixedDeltaTime * 500;
-//    bodyThorax.rotation = Quaternion.FromToRotation(bodyThorax.forward, bodyHead.forward) * bodyThorax.rotation;
-
-//    // Cálculos para el segundo par de objetos (bodyThorax y bodyAbdomen)
-//    Vector3 direction2 = bodyAbdomen.position - bodyThorax.position;
-//    float distance2 = direction2.magnitude;
-
-//    // Calcula la fuerza del muelle
-//    Vector3 force2 = thoraxAbdomenKForce * (distance2 - thoraxAbdomenDefaultDistance) * direction2.normalized;
-
-//    // Aplica la fuerza y ajusta la rotación del objeto3 (bodyAbdomen)
-//    bodyAbdomen.position -= force2 * Time.fixedDeltaTime * 20;
-//    bodyAbdomen.rotation = Quaternion.FromToRotation(bodyAbdomen.forward, bodyThorax.forward) * bodyAbdomen.rotation;
-//}
